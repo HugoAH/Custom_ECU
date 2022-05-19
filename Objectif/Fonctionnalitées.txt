@@ -5,6 +5,7 @@ Contrôle moteur (essence):
 	- Allumage
 	- Position/Vitesse vibrequin
 	- Position/Vitesse AAC
+	- TPS et/ou MAP
 	- Lambda
 
 Communication:
