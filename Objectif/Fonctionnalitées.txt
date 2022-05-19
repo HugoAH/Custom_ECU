@@ -1,0 +1,11 @@
+Commencer par faire un ECU simple
+
+Contrôle moteur (essence):
+	- Injection
+	- Allumage
+	- Position/Vitesse vibrequin
+	- Position/Vitesse AAC
+	- Lambda
+
+Communication:
+	- CAN 2A/2B
