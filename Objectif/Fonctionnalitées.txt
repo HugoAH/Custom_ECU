@@ -1,12 +1,49 @@
-Commencer par faire un ECU simple
+Commencer par faire un ECU simple monocylindre
 
 Contrôle moteur (essence):
 	- Injection
 	- Allumage
 	- Position/Vitesse vibrequin
 	- Position/Vitesse AAC
-	- TPS et/ou MAP
+	- TPS & MAP & MAT (equation qte air)
 	- Lambda
 
 Communication:
 	- CAN 2A/2B
+
+POSITION VILBREQUIN (capteur effet hall):
+	- interruption sur chaque dent
+	- calcul vitesse moyenne entre 2 dents à chaque interruption
+	- repère synchro: falling edge après dent manquante
+	- Compter nb dent lu jusqu'à détection dent manquante (vérif si synchro)
+	- Timer STM32 pour lecture temps entre chaque dent
+	- Timer overflow = dent manquante détecté
+
+POSITION AAC (capteur effet hall / demi-lune):
+	- interruption --> flag (0|1) pour position aac
+	- Au start: repère cylindre A
+	- Vérif synchro acc/vilbrequin ?
+	- Cranking : attendre synchro cylindre A pour autoriser injection/allumage
+
+Allumage:
+	- Cherche dans la table l'avance à l'allumage
+	- Conversion dwell time en angle
+	- Calcul de l'angle vilbrequin pour charger le primaire
+	- Quand angle vilbrequin = angle avance --> allumage du cylindre
+
+Injection:
+	- Cherche dans la table la durée d'injection
+	- Cherche dans la table l'angle de début d'injection
+	- Conversion temps d'ouverture en angle
+	- Angle ouverture = angle début d'injection - angle temps d'ouverture
+	- Angle fermeture = angle ouverture + angle durée injection
+	- Quand angle vilbrequin = angle ouverture --> commence l'injection
+	- Quand angle vilbrequin = angle fermeture --> stop l'injection
+
+Capteurs:
+	- TPS : 1ms
+	- MAP : 1ms
+	- MAT : 1s
+
+Lambda:
+	- juste informatif
