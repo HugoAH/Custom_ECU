@@ -45,7 +45,7 @@ void indices(float x, float L[], int SIZE_L, int* ia, int* ib)
   }
   else
   {
-    for (int i=1; i<SIZE_L; i++)
+    for (int i=1; i<SIZE_L; i++) // améliorable par dichotomie
     {
       if (x < L[i])
       {
