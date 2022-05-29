@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdbool.h"
 #include "engine_wheel_parameters.h"
 /* USER CODE END Includes */
 
@@ -45,6 +46,8 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 float crank_speed = 0;
+int tim4_Nb_interupt = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -158,12 +161,13 @@ static void MX_TIM4_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_IC_InitTypeDef sConfigIC = {0};
 
   /* USER CODE BEGIN TIM4_Init 1 */
 
   /* USER CODE END TIM4_Init 1 */
   htim4.Instance = TIM4;
-  htim4.Init.Prescaler = 64 - 1;
+  htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 65535;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -177,9 +181,21 @@ static void MX_TIM4_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_IC_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+  sConfigIC.ICFilter = 0;
+  if (HAL_TIM_IC_ConfigChannel(&htim4, &sConfigIC, TIM_CHANNEL_1) != HAL_OK)
   {
     Error_Handler();
   }
@@ -253,12 +269,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Hall_crank_Pin */
-  GPIO_InitStruct.Pin = Hall_crank_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Hall_crank_GPIO_Port, &GPIO_InitStruct);
-
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
@@ -270,17 +280,40 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == TIM4)
 	{
-		crank_speed = 0;
+		tim4_Nb_interupt ++;
 	}
 }
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+	static bool capture_crank_selector = 0;
+	static int capture_value1 = 0;
+	static int capture_value2 = 0;
+	static float crank_tooth_time = 0;
+
+	if(htim->Instance == TIM4 && htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
+	{
+		if(capture_crank_selector)
+		{
+			capture_value1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+			crank_tooth_time = tim4_Nb_interupt*T_TIM4 + (capture_value1-capture_value2)*T_CLOCK_TIM4;
+		}
+		else
+		{
+			capture_value2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
+			crank_tooth_time = tim4_Nb_interupt*T_TIM4 + (capture_value2-capture_value1)*T_CLOCK_TIM4;
+		}
+		crank_speed = CRANK_HALL_ANGLE/6/crank_tooth_time;	//RPM
+		capture_crank_selector = !capture_crank_selector;
+		tim4_Nb_interupt = 0;
+	}
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	if(GPIO_Pin == Hall_crank_Pin)
-	{
-		long timer4 = __HAL_TIM_GET_COUNTER(&htim4);
-		__HAL_TIM_SET_COUNTER(&htim4,0);
-		crank_speed = CRANK_HALL_ANGLE/6/timer4*1e6;	//RPM
-	}
+	//if(GPIO_Pin == Hall_crank_Pin)
+	//{
+	//}
 }
 
 
