@@ -35,6 +35,15 @@ float bilinear_interpolation(float x, float y, float x1, float x2, float y1, flo
 	return(z);
 }
 
+float linear_interpolation(float x, float* X, int SIZE_X, float* Y, int SIZE_Y)
+{
+  int ix1, ix2;
+  indices(x, X, SIZE_X, &ix1, &ix2);
+
+  float y = Y[ix1]+(Y[ix2]-Y[ix1])/(X[ix2]-X[ix1])*(x-X[ix1]);
+  return(y);
+}
+
 void indices(float x, float L[], int SIZE_L, int* ia, int* ib)
 {
 //return indices of the value under & over x in the increasing order list L

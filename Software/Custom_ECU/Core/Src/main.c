@@ -40,13 +40,18 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
- TIM_HandleTypeDef htim4;
+ TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 float crank_speed = 0;
+float crank_angle = 0;
+float delta_crank_angle = 0;
 int tim4_Nb_interupt = 0;
+int count_crank_tooth = 0;
+bool ECU_Sych = 0;
 
 /* USER CODE END PV */
 
@@ -55,6 +60,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM4_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -94,6 +100,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_TIM4_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -145,6 +152,51 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 64;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
 }
 
 /**
@@ -282,6 +334,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		tim4_Nb_interupt ++;
 	}
+	else if(htim->Instance == TIM3)
+	{
+		crank_angle += delta_crank_angle;
+	}
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
@@ -293,6 +349,9 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 	if(htim->Instance == TIM4 && htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
 	{
+		__HAL_TIM_SET_COUNTER(&htim3, 0);
+		count_crank_tooth ++;
+
 		if(capture_crank_selector)
 		{
 			capture_value1 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
@@ -303,9 +362,26 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			capture_value2 = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
 			crank_tooth_time = tim4_Nb_interupt*T_TIM4 + (capture_value2-capture_value1)*T_CLOCK_TIM4;
 		}
-		crank_speed = CRANK_HALL_ANGLE/6/crank_tooth_time;	//RPM
-		capture_crank_selector = !capture_crank_selector;
 		tim4_Nb_interupt = 0;
+		capture_crank_selector = !capture_crank_selector;
+
+		if(crank_tooth_time > 2*CRANK_HALL_ANGLE/(crank_speed*6))		// If we detect a missing tooth event
+		{
+			ECU_Sych = (count_crank_tooth == CRANK_TOOTH-CRANK_MISSING_TOOTH);
+
+			count_crank_tooth = 0;
+			crank_angle = ANGLE_OFFSET;
+			crank_speed = CRANK_HALL_MISS_ANGLE/6/crank_tooth_time;	//RPM
+			delta_crank_angle = T_ANGLE_UPDATE*CRANK_HALL_MISS_ANGLE/crank_tooth_time;
+		}
+		else
+		{
+			ECU_Sych = !(count_crank_tooth >= CRANK_TOOTH-CRANK_MISSING_TOOTH);
+
+			crank_angle = CRANK_HALL_ANGLE*count_crank_tooth + ANGLE_OFFSET;
+			crank_speed = CRANK_HALL_ANGLE/6/crank_tooth_time;	//RPM
+			delta_crank_angle = T_ANGLE_UPDATE*CRANK_HALL_ANGLE/crank_tooth_time;
+		}
 	}
 }
 

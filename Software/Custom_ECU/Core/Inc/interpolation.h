@@ -10,6 +10,7 @@
 
 float lookup_table2D_interpolation(float x, float y, float X[], int SIZE_X, float Y[], int SIZE_Y, float* Z);
 float bilinear_interpolation(float x, float y, float x1, float x2, float y1, float y2, float z11, float z12, float z21, float z22);
+float linear_interpolation(float x, float* X, int SIZE_X, float* Y, int SIZE_Y);
 void indices(float x, float* L, int N, int* a, int* b);
 
 #endif /* INC_INTERPOLATION_H_ */
