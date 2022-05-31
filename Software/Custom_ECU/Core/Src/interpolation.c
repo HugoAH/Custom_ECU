@@ -40,8 +40,8 @@ void indices(float x, float L[], int SIZE_L, int* ia, int* ib)
 //return indices of the value under & over x in the increasing order list L
   if (x >= L[SIZE_L-1])
   {
-    *ia = SIZE_L-1;
-    *ib = SIZE_L;
+    *ia = SIZE_L-2;
+    *ib = SIZE_L-1;
   }
   else
   {
