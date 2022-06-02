@@ -51,7 +51,7 @@ float crank_angle = 0;
 float delta_crank_angle = 0;
 int tim4_Nb_interupt = 0;
 int count_crank_tooth = 0;
-bool ECU_Sych = 0;
+bool ECU_Synch = 0;
 
 /* USER CODE END PV */
 
@@ -346,11 +346,13 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 	static int capture_value1 = 0;
 	static int capture_value2 = 0;
 	static float crank_tooth_time = 0;
+	static float last_crank_tooth_time = 0;
 
 	if(htim->Instance == TIM4 && htim->Channel == HAL_TIM_ACTIVE_CHANNEL_1)
 	{
 		__HAL_TIM_SET_COUNTER(&htim3, 0);
 		count_crank_tooth ++;
+		last_crank_tooth_time = crank_tooth_time;
 
 		if(capture_crank_selector)
 		{
@@ -365,21 +367,21 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 		tim4_Nb_interupt = 0;
 		capture_crank_selector = !capture_crank_selector;
 
-		if(crank_tooth_time > 2*CRANK_HALL_ANGLE/(crank_speed*6))		// If we detect a missing tooth event
+		if(crank_tooth_time > 1.1*last_crank_tooth_time)		// If we detect a missing tooth event
 		{
-			ECU_Sych = (count_crank_tooth == CRANK_TOOTH-CRANK_MISSING_TOOTH);
+			ECU_Synch = (count_crank_tooth == CRANK_TOOTH-CRANK_MISSING_TOOTH);
 
 			count_crank_tooth = 0;
 			crank_angle = ANGLE_OFFSET;
-			crank_speed = CRANK_HALL_MISS_ANGLE/6/crank_tooth_time;	//RPM
+			crank_speed = CRANK_HALL_MISS_ANGLE/(6*crank_tooth_time);	//RPM
 			delta_crank_angle = T_ANGLE_UPDATE*CRANK_HALL_MISS_ANGLE/crank_tooth_time;
 		}
 		else
 		{
-			ECU_Sych = !(count_crank_tooth >= CRANK_TOOTH-CRANK_MISSING_TOOTH);
+			ECU_Synch = (count_crank_tooth < CRANK_TOOTH-CRANK_MISSING_TOOTH);
 
 			crank_angle = CRANK_HALL_ANGLE*count_crank_tooth + ANGLE_OFFSET;
-			crank_speed = CRANK_HALL_ANGLE/6/crank_tooth_time;	//RPM
+			crank_speed = CRANK_HALL_ANGLE/(6*crank_tooth_time);	//RPM
 			delta_crank_angle = T_ANGLE_UPDATE*CRANK_HALL_ANGLE/crank_tooth_time;
 		}
 	}

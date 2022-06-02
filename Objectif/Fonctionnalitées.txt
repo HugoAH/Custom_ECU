@@ -17,7 +17,6 @@ POSITION VILBREQUIN (capteur effet hall):
 	- repère synchro: falling edge après dent manquante
 	- Compter nb dent lu jusqu'à détection dent manquante (vérif si synchro)
 	- Timer STM32 pour lecture temps entre chaque dent
-	- Timer overflow = dent manquante détecté
 
 POSITION AAC (capteur effet hall / demi-lune):
 	- interruption --> flag (0|1) pour position aac
