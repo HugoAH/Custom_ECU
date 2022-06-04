@@ -337,11 +337,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Cam_crank_Pin */
-  GPIO_InitStruct.Pin = Cam_crank_Pin;
+  /*Configure GPIO pin : Hall_cam_Pin */
+  GPIO_InitStruct.Pin = Hall_cam_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(Cam_crank_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Hall_cam_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
@@ -419,27 +419,29 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//}
 
 	//Cam sensor implementation
-	//Check synchro error if engine is rotating
-	if ((crank_angle < SYNC_CRANK_ANGLE_RANGE_MIN || crank_angle > SYNC_CRANK_ANGLE_RANGE_MAX) && engineState > IGNITION_ON)
-	{
-		switch(synchroState)
-			{
-			case SYNCHRO_INIT:
-				crank_angle += 360;
-				break;
-			case SYNCHRO_OK:
-				synchroState = SYNCHRO_ERROR;
-				Error_Handler();
-				break;
-			case SYNCHRO_ERROR:
-				Error_Handler();
-				break;
-			}
-	}
-	//If engine is rotating, the Synchro is OK
-	else if (engineState > IGNITION_ON)
-	{
-		synchroState = SYNCHRO_OK;
+	if (GPIO_Pin==Hall_cam_Pin) {
+		//Check synchro error if engine is rotating
+		if ((crank_angle < SYNC_CRANK_ANGLE_RANGE_MIN || crank_angle > SYNC_CRANK_ANGLE_RANGE_MAX) && engineState > IGNITION_ON)
+		{
+			switch(synchroState)
+				{
+				case SYNCHRO_INIT:
+					crank_angle += 360;
+					break;
+				case SYNCHRO_OK:
+					synchroState = SYNCHRO_ERROR;
+					Error_Handler();
+					break;
+				case SYNCHRO_ERROR:
+					Error_Handler();
+					break;
+				}
+		}
+		//If engine is rotating, the Synchro is OK
+		else if (engineState > IGNITION_ON)
+		{
+			synchroState = SYNCHRO_OK;
+		}
 	}
 }
 
