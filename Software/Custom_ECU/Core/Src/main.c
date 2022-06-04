@@ -28,6 +28,13 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+//To discuss if they move to a .h
+typedef enum{
+	SYNCHRO_INIT = 0,
+	SYNCHRO_OK = 1,
+	SYNCHRO_ERROR = 2
+
+} synchroState_t;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -53,6 +60,7 @@ int tim4_Nb_interupt = 0;
 int count_crank_tooth = 0;
 bool ECU_Synch = 0;
 
+synchroState_t synchroState = SYNCHRO_INIT;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -321,7 +329,16 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : Cam_crank_Pin */
+  GPIO_InitStruct.Pin = Cam_crank_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Cam_crank_GPIO_Port, &GPIO_InitStruct);
+
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -392,6 +409,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//if(GPIO_Pin == Hall_crank_Pin)
 	//{
 	//}
+
+	//Cam sensor implementation
+	if (crank_angle < SYNC_CRANK_ANGLE_RANGE_MIN || crank_angle > SYNC_CRANK_ANGLE_RANGE_MAX)
+	{
+		switch(synchroState)
+			{
+			case SYNCHRO_INIT:
+				crank_angle += 360;
+				break;
+			case SYNCHRO_OK:
+				synchroState = SYNCHRO_ERROR;
+				break;
+			case SYNCHRO_ERROR:
+				Error_Handler();
+				break;
+			}
+	}
 }
 
 

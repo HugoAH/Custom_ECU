@@ -19,4 +19,11 @@
 #define T_ANGLE_UPDATE 1e-6
 #define ANGLE_OFFSET 0
 
+/***************** CAMSHAFT PARAMETERS  ******************************/
+
+/*Minimum and maximum expected values of the crankshaft angle
+when the camshaft is detected*/
+#define SYNC_CRANK_ANGLE_RANGE_MIN 120
+#define SYNC_CRANK_ANGLE_RANGE_MAX 360
+
 #endif /* INC_ENGINE_WHEEL_PARAMETERS_H_ */

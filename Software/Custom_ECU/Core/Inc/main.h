@@ -72,6 +72,9 @@ void Error_Handler(void);
 #define TCK_GPIO_Port GPIOA
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define Cam_crank_Pin GPIO_PIN_4
+#define Cam_crank_GPIO_Port GPIOB
+#define Cam_crank_EXTI_IRQn EXTI4_IRQn
 #define Hall_crank_Pin GPIO_PIN_6
 #define Hall_crank_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
