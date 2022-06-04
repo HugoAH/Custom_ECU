@@ -18,6 +18,9 @@ POSITION VILBREQUIN (capteur effet hall):
 	- Compter nb dent lu jusqu'à détection dent manquante (vérif si synchro)
 	- Timer STM32 pour lecture temps entre chaque dent
 
+	- 0 degré (référence) au pmh du cylindre 1
+	- modulo 720
+
 POSITION AAC (capteur effet hall / demi-lune):
 	- interruption --> flag (0|1) pour position aac
 	- Au start: repère cylindre A
@@ -46,3 +49,14 @@ Capteurs:
 
 Lambda:
 	- juste informatif
+
+-----
+Procedures:
+	
+#Synchro:
+-Init:
+	- Attendre 1ère dent manquante vilo, puis commencer le calcul de l'angle vilebrequin
+	- A la première interuption AAC, vérifier que l'angle vilo est dans la bonne plage, sinon + 360
+	- Init done, synchro ok
+-Engine_Runnging:
+	- A chaque interruption AAC, vérifier que l'angle vilo est dans la bonne plage, sinon erreur synchro
