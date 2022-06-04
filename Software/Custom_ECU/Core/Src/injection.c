@@ -20,7 +20,7 @@ float fuel_to_time(float fuel_qte, float flow_rate)
   return(fuel_qte/flow_rate);
 }
 
-float fuel_eq(float pressure, float VE, float temperature, float lbda_target)
+float mass_fuel_eq(float pressure, float VE, float temperature, float lbda_target)
 {
   // https://adaptronicecu.com/blogs/modular-instructional-videos/fuel-model-in-modular-ecus
 
@@ -33,24 +33,39 @@ float fuel_eq(float pressure, float VE, float temperature, float lbda_target)
   return(mass_fuel);
 }
 
-float fuel_to_inject(float speed_rpm, float map,float temperature, float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ)
+float fuel_to_inject(float speed_rpm, float map, float temperature, float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ)
 {
   float lbda_target = 1;
   float VE = lookup_table2D_interpolation(speed_rpm, map, SPEED_INJ, SIZE_SPEED_INJ, MAP_INJ, SIZE_MAP_INJ, FUEL_INJ);
-  float fuel_qte = fuel_eq(map, VE, temperature, lbda_target);
+  float fuel_qte = mass_fuel_eq(map, VE, temperature, lbda_target);
   return(fuel_qte);
 }
 
-void injection_angle(float* start_inj_angle, float* end_inj_angle, float PMH_angle, float speed_rpm, float map, float temperature, float flow_rate,
+// VE TABLE
+void VE_injection_angle(float* start_inj_angle, float* end_inj_angle, float PMH_angle, float speed_rpm, float map, float temperature, float flow_rate,
 float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ,
 float SPEED_INJ_TIMING[], int SIZE_SPEED_INJ_TIMING, float MAP_INJ_TIMING[], int SIZE_MAP_INJ_TIMING, float* FUEL_INJ_TIMING)
 {
-  *start_inj_angle = fmod(PMH_angle - lookup_table2D_interpolation(speed_rpm, map, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING, FUEL_INJ_TIMING), 360);
+  *start_inj_angle = fmod(PMH_angle - lookup_table2D_interpolation(speed_rpm, map, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING, FUEL_INJ_TIMING), 720);
 
   float fuel_qte = fuel_to_inject(speed_rpm, map, temperature, SPEED_INJ, SIZE_SPEED_INJ, MAP_INJ, SIZE_MAP_INJ, FUEL_INJ);
   float fuel_time = fuel_to_time(fuel_qte, flow_rate);
   float fuel_angle = time_to_angle(fuel_time, speed_rpm);
 
-  *end_inj_angle = fmod((*start_inj_angle + fuel_angle), 360);
-  *start_inj_angle = fmod(*start_inj_angle - time_to_angle(TIME_INJ_OPENNING, speed_rpm), 360);
+  *end_inj_angle = fmod((*start_inj_angle + fuel_angle), 720);
+  *start_inj_angle = fmod(*start_inj_angle - time_to_angle(TIME_INJ_OPENNING, speed_rpm), 720);
+}
+
+// INJECTION LENGTH TABLE
+void injection_angle(float* start_inj_angle, float* end_inj_angle, float PMH_angle, float speed_rpm, float map,
+float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ,
+float SPEED_INJ_TIMING[], int SIZE_SPEED_INJ_TIMING, float MAP_INJ_TIMING[], int SIZE_MAP_INJ_TIMING, float* FUEL_INJ_TIMING)
+{
+	*start_inj_angle = fmod(PMH_angle - lookup_table2D_interpolation(speed_rpm, map, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING, FUEL_INJ_TIMING), 720);
+
+	float fuel_time = lookup_table2D_interpolation(speed_rpm, map, SPEED_INJ, SIZE_SPEED_INJ, MAP_INJ, SIZE_MAP_INJ, FUEL_INJ);
+	float fuel_angle = time_to_angle(fuel_time, speed_rpm);
+
+	*end_inj_angle = fmod((*start_inj_angle + fuel_angle), 720);
+	*start_inj_angle = fmod(*start_inj_angle - time_to_angle(TIME_INJ_OPENNING, speed_rpm), 720);
 }

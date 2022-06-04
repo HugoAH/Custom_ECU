@@ -15,9 +15,13 @@ float time_to_angle(float time_ms, float speed_rpm);
 float fuel_to_time(float fuel_qte, float flow_rate);
 float fuel_eq(float pressure, float VE, float temperature, float lbda_target);
 
-float fuel_to_inject(float speed_rpm, float map,float temperature, float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ);
+float mass_fuel_to_inject(float speed_rpm, float map,float temperature, float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ);
 
-void injection_angle(float* start_inj_angle, float* end_inj_angle, float PMH_angle, float speed_rpm, float map, float temperature, float flow_rate,
+void VE_injection_angle(float* start_inj_angle, float* end_inj_angle, float PMH_angle, float speed_rpm, float map, float temperature, float flow_rate,
+float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ,
+float SPEED_INJ_TIMING[], int SIZE_SPEED_INJ_TIMING, float MAP_INJ_TIMING[], int SIZE_MAP_INJ_TIMING, float* FUEL_INJ_TIMING);
+
+void injection_angle(float* start_inj_angle, float* end_inj_angle, float PMH_angle, float speed_rpm, float map,
 float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ,
 float SPEED_INJ_TIMING[], int SIZE_SPEED_INJ_TIMING, float MAP_INJ_TIMING[], int SIZE_MAP_INJ_TIMING, float* FUEL_INJ_TIMING);
 

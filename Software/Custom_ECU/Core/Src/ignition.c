@@ -20,6 +20,6 @@ void ignition_angle(float* charge_angle, float* spark_angle, float PMH_angle, fl
 	float adv_angle = lookup_table2D_interpolation(speed_rpm, MAP, SPEED_IGN, SIZE_SPEED_IGN, MAP_IGN, SIZE_MAP_IGN, IGN_ADV);
 	float dwell_angle = dwell_to_angle(dwell_ms, speed_rpm);
 
-	*spark_angle = fmod(PMH_angle - adv_angle, 360);		//Angle to stop current in primary circuit of sparkplug transformer
-	*charge_angle = fmod(*spark_angle - dwell_angle, 360);	//Angle to begin the charge of primary circuit of sparkplug transformer
+	*spark_angle = fmod(PMH_angle - adv_angle, 720);		//Angle to stop current in primary circuit of sparkplug transformer
+	*charge_angle = fmod(*spark_angle - dwell_angle, 720);	//Angle to begin the charge of primary circuit of sparkplug transformer
 }

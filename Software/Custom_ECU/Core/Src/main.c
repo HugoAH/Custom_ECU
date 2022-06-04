@@ -40,8 +40,21 @@ typedef enum{
 	SYNCHRO_INIT = 0,
 	SYNCHRO_OK = 1,
 	SYNCHRO_ERROR = 2
-
 } synchroState_t;
+
+struct EngineStatus{
+	//engineState_t engineState = OFF;
+	//synchroState_t synchroState = SYNCHRO_INIT;
+	//bool missmatch_crank_tooth = false;
+	//bool missmatch_cam_angle = false;
+
+	engineState_t engineState;
+	synchroState_t synchroState;
+	bool missmatch_crank_tooth;
+	bool missmatch_cam_angle;
+};
+typedef struct EngineStatus EngineStatus;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -65,10 +78,10 @@ float crank_angle = 0;
 float delta_crank_angle = 0;
 int tim4_Nb_interupt = 0;
 int count_crank_tooth = 0;
-bool ECU_Synch = 0;
+bool missmatch_crank_tooth = 0;
+bool crank_half_cycle = 0;		// 0: crank_angle=[0,360] ; 1: crank_angle=[360,720]
 
-engineState_t engineState = OFF;
-synchroState_t synchroState = SYNCHRO_INIT;
+EngineStatus engine_status = {OFF, SYNCHRO_INIT, false, false};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -126,7 +139,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	  while(engine_status.synchroState == SYNCHRO_OK && engine_status.engineState == RUNNING)
+	  {
+		  //check ignitions events
+		  //check injections events
+	  }
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -394,18 +411,21 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 		if(crank_tooth_time > 1.1*last_crank_tooth_time)		// If we detect a missing tooth event
 		{
-			ECU_Synch = (count_crank_tooth == CRANK_TOOTH-CRANK_MISSING_TOOTH);
+			engine_status.missmatch_crank_tooth = (count_crank_tooth != CRANK_TOOTH-CRANK_MISSING_TOOTH);
 
 			count_crank_tooth = 0;
-			crank_angle = ANGLE_OFFSET;
+
+			crank_angle = ANGLE_OFFSET + crank_half_cycle*360;
+			crank_half_cycle = !crank_half_cycle;
+
 			crank_speed = CRANK_HALL_MISS_ANGLE/(6*crank_tooth_time);	//RPM
 			delta_crank_angle = T_ANGLE_UPDATE*CRANK_HALL_MISS_ANGLE/crank_tooth_time;
 		}
 		else
 		{
-			ECU_Synch = (count_crank_tooth < CRANK_TOOTH-CRANK_MISSING_TOOTH);
+			engine_status.missmatch_crank_tooth = (count_crank_tooth >= CRANK_TOOTH-CRANK_MISSING_TOOTH);
 
-			crank_angle = CRANK_HALL_ANGLE*count_crank_tooth + ANGLE_OFFSET;
+			crank_angle = CRANK_HALL_ANGLE*count_crank_tooth + (ANGLE_OFFSET + crank_half_cycle*360);
 			crank_speed = CRANK_HALL_ANGLE/(6*crank_tooth_time);	//RPM
 			delta_crank_angle = T_ANGLE_UPDATE*CRANK_HALL_ANGLE/crank_tooth_time;
 		}
@@ -414,33 +434,31 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	//if(GPIO_Pin == Hall_crank_Pin)
-	//{
-	//}
-
 	//Cam sensor implementation
-	if (GPIO_Pin==Hall_cam_Pin) {
+	if (GPIO_Pin == Hall_cam_Pin)
+	{
 		//Check synchro error if engine is rotating
-		if ((crank_angle < SYNC_CRANK_ANGLE_RANGE_MIN || crank_angle > SYNC_CRANK_ANGLE_RANGE_MAX) && engineState > IGNITION_ON)
+		if ((crank_angle < SYNC_CRANK_ANGLE_RANGE_MIN || crank_angle > SYNC_CRANK_ANGLE_RANGE_MAX) && engine_status.engineState >= CRANKING)
 		{
-			switch(synchroState)
-				{
-				case SYNCHRO_INIT:
-					crank_angle += 360;
-					break;
-				case SYNCHRO_OK:
-					synchroState = SYNCHRO_ERROR;
-					Error_Handler();
-					break;
-				case SYNCHRO_ERROR:
-					Error_Handler();
-					break;
-				}
+			switch(engine_status.synchroState)
+			{
+			case SYNCHRO_INIT:
+				crank_half_cycle = 0;
+				break;
+			case SYNCHRO_OK:
+				engine_status.synchroState = SYNCHRO_ERROR;
+				engine_status.missmatch_cam_angle = true;
+				Error_Handler(); //Synch_Error_Handler() ?
+				break;
+			case SYNCHRO_ERROR:
+				Error_Handler();
+				break;
+			}
 		}
 		//If engine is rotating, the Synchro is OK
-		else if (engineState > IGNITION_ON)
+		else if (engine_status.engineState >= CRANKING && engine_status.synchroState == SYNCHRO_INIT)
 		{
-			synchroState = SYNCHRO_OK;
+			engine_status.synchroState = SYNCHRO_OK;
 		}
 	}
 }
