@@ -30,6 +30,13 @@
 
 //To discuss if they move to a .h
 typedef enum{
+	OFF = 0,
+	IGNITION_ON = 1,
+	CRANKING = 2,
+	RUNNING = 3
+} engineState_t;
+
+typedef enum{
 	SYNCHRO_INIT = 0,
 	SYNCHRO_OK = 1,
 	SYNCHRO_ERROR = 2
@@ -60,6 +67,7 @@ int tim4_Nb_interupt = 0;
 int count_crank_tooth = 0;
 bool ECU_Synch = 0;
 
+engineState_t engineState = OFF;
 synchroState_t synchroState = SYNCHRO_INIT;
 /* USER CODE END PV */
 
@@ -411,7 +419,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	//}
 
 	//Cam sensor implementation
-	if (crank_angle < SYNC_CRANK_ANGLE_RANGE_MIN || crank_angle > SYNC_CRANK_ANGLE_RANGE_MAX)
+	//Check synchro error if engine is rotating
+	if ((crank_angle < SYNC_CRANK_ANGLE_RANGE_MIN || crank_angle > SYNC_CRANK_ANGLE_RANGE_MAX) && engineState > IGNITION_ON)
 	{
 		switch(synchroState)
 			{
@@ -420,11 +429,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				break;
 			case SYNCHRO_OK:
 				synchroState = SYNCHRO_ERROR;
+				Error_Handler();
 				break;
 			case SYNCHRO_ERROR:
 				Error_Handler();
 				break;
 			}
+	}
+	//If engine is rotating, the Synchro is OK
+	else if (engineState > IGNITION_ON)
+	{
+		synchroState = SYNCHRO_OK;
 	}
 }
 
