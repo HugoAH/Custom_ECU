@@ -133,7 +133,7 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-  generate_PMH_IGN(L_Cylinder);
+  Cylinder_Init(L_Cylinder);
 
   /* USER CODE END 2 */
 

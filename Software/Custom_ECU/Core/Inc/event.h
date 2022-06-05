@@ -26,8 +26,8 @@ typedef struct Cylinder{
 	float lbda;
 }Cylinder;
 
-void cylinder_pin(Cylinder* c);
-void generate_PMH_IGN(Cylinder* l);
+void Cylinder_pin(Cylinder* c);
+void Cylinder_Init(Cylinder* l);
 void generate_ignition_event(Cylinder* l, float dwell_ms, float speed_rpm, float MAP, float SPEED_IGN[], int SIZE_SPEED_IGN, float MAP_IGN[], int SIZE_MAP_IGN, float* IGN_ADV);
 void generate_injection_event(Cylinder* l, float speed_rpm, float map,
 		float SPEED_INJ[], int SIZE_SPEED_INJ, float MAP_INJ[], int SIZE_MAP_INJ, float* FUEL_INJ,

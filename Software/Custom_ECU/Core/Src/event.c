@@ -11,7 +11,7 @@
 #include "ignition.h"
 #include "injection.h"
 
-void cylinder_pin(Cylinder* c)
+void Cylinder_pin(Cylinder* c)
 {
 	switch (c->num)
 	{
@@ -45,17 +45,17 @@ void cylinder_pin(Cylinder* c)
 	}
 }
 
-void generate_PMH_IGN(Cylinder list_cylinder[Nb_Cylinder])		// Cyl 1 PMH = 0°
+void Cylinder_Init(Cylinder list_cylinder[Nb_Cylinder])		// Cyl 1 PMH = 0°
 {
 	list_cylinder[0].num = 1;
 	list_cylinder[0].IGN_PMH = 0;
-	cylinder_pin(&list_cylinder[0]);
+	Cylinder_pin(&list_cylinder[0]);
 
 	for(int i=1; i<Nb_Cylinder; i++)
 	{
 		list_cylinder[i].num = i+1;
 		list_cylinder[i].IGN_PMH = list_cylinder[i-1].IGN_PMH + Delta_PMH_IGN;
-		cylinder_pin(&list_cylinder[i]);
+		Cylinder_pin(&list_cylinder[i]);
 
 	}
 }
