@@ -5,11 +5,14 @@
  *      Author: hugoA
  */
 
+#ifndef INC_ENGINE_PARAMETERS_H_
+#define INC_ENGINE_PARAMETERS_H_
+
+
+#define Nb_Cylinder 3
+#define Delta_PMH_IGN 720/Nb_Cylinder
+
 /***************** CRANKSHAFT PARAMETERS  ******************************/
-
-#ifndef INC_ENGINE_WHEEL_PARAMETERS_H_
-#define INC_ENGINE_WHEEL_PARAMETERS_H_
-
 #define CRANK_TOOTH 26
 #define CRANK_MISSING_TOOTH 2
 #define CRANK_HALL_ANGLE 360/(CRANK_TOOTH-CRANK_MISSING_TOOTH)
@@ -19,13 +22,15 @@
 #define T_TIM4 T_CLOCK_TIM4*65535
 
 #define T_ANGLE_UPDATE 1e-6
-#define ANGLE_OFFSET 0
+#define ANGLE_OFFSET 0			//crank angle at the 1st tooth after missing gap
 
 /***************** CAMSHAFT PARAMETERS  ******************************/
-
 /*Minimum and maximum expected values of the crankshaft angle
 when the camshaft is detected*/
 #define SYNC_CRANK_ANGLE_RANGE_MIN 120
 #define SYNC_CRANK_ANGLE_RANGE_MAX 360
 
-#endif /* INC_ENGINE_WHEEL_PARAMETERS_H_ */
+
+
+
+#endif /* INC_ENGINE_PARAMETERS_H_ */

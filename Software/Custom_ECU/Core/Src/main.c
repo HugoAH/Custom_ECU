@@ -22,7 +22,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdbool.h"
-#include "engine_wheel_parameters.h"
+#include "engine_parameters.h"
+#include "event.h"
+#include "ignition.h"
+#include "injection.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -82,6 +86,14 @@ bool missmatch_crank_tooth = 0;
 bool crank_half_cycle = 0;		// 0: crank_angle=[0,360] ; 1: crank_angle=[360,720]
 
 EngineStatus engine_status = {OFF, SYNCHRO_INIT, false, false};
+
+float L_PMH[Nb_Cylinder];
+float L_IGN_event[Nb_Cylinder][2];
+float L_INJ_event[Nb_Cylinder][2];
+
+float speed_rpm;
+float map;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -130,20 +142,42 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
-  /* USER CODE BEGIN 2 */
 
+  /* USER CODE BEGIN 2 */
+  generate_PMH_IGN(L_PMH);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
 	  while(engine_status.synchroState == SYNCHRO_OK && engine_status.engineState == RUNNING)
 	  {
-		  //check ignitions events
-		  //check injections events
+		  for(int i=0; i<Nb_Cylinder; i++)
+		  {
+			  if((L_IGN_event[i][0]<crank_angle) && (crank_angle<L_IGN_event[i][1]))
+			  {
+				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_SET);
+			  }
+			  else
+			  {
+				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_RESET);
+			  }
+
+			  if((L_INJ_event[i][0]<crank_angle) && (crank_angle<L_INJ_event[i][1]))
+			  {
+				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_SET);
+			  }
+			  else
+			  {
+				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_RESET);
+			  }
+		  }
 	  }
+
+
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -208,7 +242,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 64;
+  htim3.Init.Period = 640;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
@@ -429,6 +463,14 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			crank_speed = CRANK_HALL_ANGLE/(6*crank_tooth_time);	//RPM
 			delta_crank_angle = T_ANGLE_UPDATE*CRANK_HALL_ANGLE/crank_tooth_time;
 		}
+
+		if(engine_status.missmatch_crank_tooth || engine_status.missmatch_cam_angle)
+		{
+			engine_status.synchroState = SYNCHRO_ERROR;
+		}
+
+		generate_ignition_event(L_IGN_event[0], L_PMH, dwell_ms, speed_rpm, map, SPEED_IGN, SIZE_SPEED_IGN_TABLE, MAP_IGN, SIZE_MAP_IGN_TABLE, IGN_ADV);
+		generate_injection_event(L_INJ_event[0], L_PMH, speed_rpm, map, SPEED_INJ, SIZE_SPEED_INJ_TABLE, MAP_INJ, SIZE_MAP_INJ_TABLE, FUEL_INJ, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING_TABLE, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING_TABLE, FUEL_INJ_TIMING);
 	}
 }
 

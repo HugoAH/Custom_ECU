@@ -11,6 +11,24 @@
 #define TIME_INJ_OPENNING 1
 #define Q_INJ 1
 
+
+#define SIZE_SPEED_INJ_TABLE 10
+#define SIZE_MAP_INJ_TABLE 10
+
+#define SIZE_SPEED_INJ_TIMING_TABLE 10
+#define SIZE_MAP_INJ_TIMING_TABLE 10
+
+
+extern float SPEED_INJ[SIZE_SPEED_INJ_TABLE];
+extern float MAP_INJ[SIZE_MAP_INJ_TABLE];
+extern float* FUEL_INJ;
+
+extern float SPEED_INJ_TIMING[SIZE_SPEED_INJ_TIMING_TABLE];
+extern float MAP_INJ_TIMING[SIZE_MAP_INJ_TIMING_TABLE];
+extern float* FUEL_INJ_TIMING;
+
+
+
 float time_to_angle(float time_ms, float speed_rpm);
 float fuel_to_time(float fuel_qte, float flow_rate);
 float fuel_eq(float pressure, float VE, float temperature, float lbda_target);

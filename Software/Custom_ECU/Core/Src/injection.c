@@ -9,6 +9,18 @@
 #include "injection.h"
 #include "interpolation.h"
 
+// lookup table qte fuel
+float SPEED_INJ[SIZE_SPEED_INJ_TABLE] = {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
+float MAP_INJ[SIZE_MAP_INJ_TABLE] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+float* FUEL_INJ;
+
+// lookup table start injecting
+float SPEED_INJ_TIMING[SIZE_SPEED_INJ_TIMING_TABLE] = {1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
+float MAP_INJ_TIMING[SIZE_MAP_INJ_TIMING_TABLE] = {100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
+float* FUEL_INJ_TIMING;
+
+
+
 float time_to_angle(float time_ms, float speed_rpm)
 {
 	float angle = time_ms*speed_rpm*6/1000.0;
