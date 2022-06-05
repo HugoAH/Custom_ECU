@@ -22,7 +22,7 @@
 #define T_TIM4 T_CLOCK_TIM4*65535
 
 #define T_ANGLE_UPDATE 1e-6
-#define ANGLE_OFFSET 0			//crank angle at the 1st tooth after missing gap
+#define ANGLE_OFFSET 0			//crank angle at the 1st tooth after missing gap (0° = IGN PMH Cylinder1)
 
 /***************** CAMSHAFT PARAMETERS  ******************************/
 /*Minimum and maximum expected values of the crankshaft angle

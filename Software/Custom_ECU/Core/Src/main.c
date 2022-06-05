@@ -46,18 +46,12 @@ typedef enum{
 	SYNCHRO_ERROR = 2
 } synchroState_t;
 
-struct EngineStatus{
-	//engineState_t engineState = OFF;
-	//synchroState_t synchroState = SYNCHRO_INIT;
-	//bool missmatch_crank_tooth = false;
-	//bool missmatch_cam_angle = false;
-
+typedef struct EngineStatus{
 	engineState_t engineState;
 	synchroState_t synchroState;
 	bool missmatch_crank_tooth;
 	bool missmatch_cam_angle;
-};
-typedef struct EngineStatus EngineStatus;
+}EngineStatus;
 
 /* USER CODE END PTD */
 
@@ -82,14 +76,10 @@ float crank_angle = 0;
 float delta_crank_angle = 0;
 int tim4_Nb_interupt = 0;
 int count_crank_tooth = 0;
-bool missmatch_crank_tooth = 0;
 bool crank_half_cycle = 0;		// 0: crank_angle=[0,360] ; 1: crank_angle=[360,720]
 
 EngineStatus engine_status = {OFF, SYNCHRO_INIT, false, false};
-
-float L_PMH[Nb_Cylinder];
-float L_IGN_event[Nb_Cylinder][2];
-float L_INJ_event[Nb_Cylinder][2];
+Cylinder L_Cylinder[Nb_Cylinder] = {0};
 
 float speed_rpm;
 float map;
@@ -142,38 +132,16 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM4_Init();
   MX_TIM3_Init();
-
   /* USER CODE BEGIN 2 */
-  generate_PMH_IGN(L_PMH);
+  generate_PMH_IGN(L_Cylinder);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  while(engine_status.synchroState == SYNCHRO_OK && engine_status.engineState == RUNNING)
-	  {
-		  for(int i=0; i<Nb_Cylinder; i++)
-		  {
-			  if((L_IGN_event[i][0]<crank_angle) && (crank_angle<L_IGN_event[i][1]))
-			  {
-				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_SET);
-			  }
-			  else
-			  {
-				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_RESET);
-			  }
 
-			  if((L_INJ_event[i][0]<crank_angle) && (crank_angle<L_INJ_event[i][1]))
-			  {
-				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_SET);
-			  }
-			  else
-			  {
-				  //HAL_GPIO_WritePin(PortLabel, UserLabel_Pin, GPIO_PIN_RESET);
-			  }
-		  }
-	  }
 
 
     /* USER CODE END WHILE */
@@ -375,6 +343,10 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, IGN1_Pin|IGN2_Pin|IGN3_Pin|IGN4_Pin
+                          |INJ4_Pin|INJ3_Pin|INJ2_Pin|INJ1_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -387,6 +359,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : IGN1_Pin IGN2_Pin IGN3_Pin IGN4_Pin
+                           INJ4_Pin INJ3_Pin INJ2_Pin INJ1_Pin */
+  GPIO_InitStruct.Pin = IGN1_Pin|IGN2_Pin|IGN3_Pin|IGN4_Pin
+                          |INJ4_Pin|INJ3_Pin|INJ2_Pin|INJ1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : Hall_cam_Pin */
   GPIO_InitStruct.Pin = Hall_cam_Pin;
@@ -413,6 +394,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	else if(htim->Instance == TIM3)
 	{
 		crank_angle += delta_crank_angle;
+		if(engine_status.synchroState == SYNCHRO_OK && engine_status.engineState == RUNNING)
+		{
+			for(int i=0; i<Nb_Cylinder; i++)
+			{
+				HAL_GPIO_WritePin(L_Cylinder[i].IGN_GPIO_Port, L_Cylinder[i].IGN_Pin, (L_Cylinder[i].charge_angle<=crank_angle) && (crank_angle<=L_Cylinder[i].spark_angle));
+				HAL_GPIO_WritePin(L_Cylinder[i].INJ_GPIO_Port, L_Cylinder[i].INJ_Pin, (L_Cylinder[i].start_inj_angle<=crank_angle) && (crank_angle<=L_Cylinder[i].end_inj_angle));
+			}
+		}
 	}
 }
 
@@ -469,8 +458,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			engine_status.synchroState = SYNCHRO_ERROR;
 		}
 
-		generate_ignition_event(L_IGN_event[0], L_PMH, dwell_ms, speed_rpm, map, SPEED_IGN, SIZE_SPEED_IGN_TABLE, MAP_IGN, SIZE_MAP_IGN_TABLE, IGN_ADV);
-		generate_injection_event(L_INJ_event[0], L_PMH, speed_rpm, map, SPEED_INJ, SIZE_SPEED_INJ_TABLE, MAP_INJ, SIZE_MAP_INJ_TABLE, FUEL_INJ, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING_TABLE, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING_TABLE, FUEL_INJ_TIMING);
+		generate_ignition_event(L_Cylinder, dwell_ms, speed_rpm, map, SPEED_IGN, SIZE_SPEED_IGN_TABLE, MAP_IGN, SIZE_MAP_IGN_TABLE, IGN_ADV);
+		generate_injection_event(L_Cylinder, speed_rpm, map, SPEED_INJ, SIZE_SPEED_INJ_TABLE, MAP_INJ, SIZE_MAP_INJ_TABLE, FUEL_INJ, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING_TABLE, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING_TABLE, FUEL_INJ_TIMING);
 	}
 }
 
