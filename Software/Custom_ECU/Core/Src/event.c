@@ -16,30 +16,30 @@ void Cylinder_pin(Cylinder* c)
 	switch (c->num)
 	{
 	case(1):
-		c->IGN_Pin = (GPIO_TypeDef*) IGN1_Pin;
+		c->IGN_Pin = (uint16_t) IGN1_Pin;
 		c->IGN_GPIO_Port = (GPIO_TypeDef*) IGN1_GPIO_Port;
-		c->INJ_Pin = (GPIO_TypeDef*) INJ1_Pin;
+		c->INJ_Pin = (uint16_t) INJ1_Pin;
 		c->INJ_GPIO_Port = (GPIO_TypeDef*) INJ1_GPIO_Port;
 		break;
 
 	case(2):
-		c->IGN_Pin = (GPIO_TypeDef*) IGN2_Pin;
+		c->IGN_Pin = (uint16_t) IGN2_Pin;
 		c->IGN_GPIO_Port = (GPIO_TypeDef*) IGN2_GPIO_Port;
-		c->INJ_Pin = (GPIO_TypeDef*) INJ2_Pin;
+		c->INJ_Pin = (uint16_t) INJ2_Pin;
 		c->INJ_GPIO_Port = (GPIO_TypeDef*) INJ2_GPIO_Port;
 		break;
 
 	case(3):
-		c->IGN_Pin = (GPIO_TypeDef*) IGN3_Pin;
+		c->IGN_Pin = (uint16_t) IGN3_Pin;
 		c->IGN_GPIO_Port = (GPIO_TypeDef*) IGN3_GPIO_Port;
-		c->INJ_Pin = (GPIO_TypeDef*) INJ3_Pin;
+		c->INJ_Pin = (uint16_t) INJ3_Pin;
 		c->INJ_GPIO_Port = (GPIO_TypeDef*) INJ3_GPIO_Port;
 		break;
 
 	case(4):
-		c->IGN_Pin = (GPIO_TypeDef*) IGN4_Pin;
+		c->IGN_Pin = (uint16_t) IGN4_Pin;
 		c->IGN_GPIO_Port = (GPIO_TypeDef*) IGN4_GPIO_Port;
-		c->INJ_Pin = (GPIO_TypeDef*) INJ4_Pin;
+		c->INJ_Pin = (uint16_t) INJ4_Pin;
 		c->INJ_GPIO_Port = (GPIO_TypeDef*) INJ4_GPIO_Port;
 		break;
 	}

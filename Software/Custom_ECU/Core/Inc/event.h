@@ -11,9 +11,9 @@
 typedef struct Cylinder{
 	int num;
 	GPIO_TypeDef* IGN_GPIO_Port;
-	GPIO_TypeDef* IGN_Pin;
+	uint16_t IGN_Pin;
 	GPIO_TypeDef* INJ_GPIO_Port;
-	GPIO_TypeDef* INJ_Pin;
+	uint16_t INJ_Pin;
 
 	float IGN_PMH;
 
