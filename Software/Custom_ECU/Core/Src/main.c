@@ -26,6 +26,7 @@
 #include "event.h"
 #include "ignition.h"
 #include "injection.h"
+#include "adc.h"
 
 /* USER CODE END Includes */
 
@@ -82,11 +83,10 @@ bool crank_half_cycle = 0;		// 0: crank_angle=[0,360] ; 1: crank_angle=[360,720]
 
 EngineStatus engine_status = {OFF, SYNCHRO_INIT, false, false};
 Cylinder L_Cylinder[Nb_Cylinder] = {0};
+Sensor map_sensor = {0};
+Sensor mat_sensor = {0};
 
 float speed_rpm = 0;
-float map = 0;
-float mat = 0;
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -139,6 +139,10 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   Cylinder_Init(L_Cylinder);
+  Sensor_Init(&map_sensor, MAP_Sensor_GPIO_Port, MAP_Sensor_Pin, 1, 0);
+  Sensor_Init(&mat_sensor, MAT_Sensor_GPIO_Port, MAT_Sensor_Pin, 1, 0);
+  map_sensor.hadc_p = &hadc1;		// Affectation statique à ADC1
+  mat_sensor.hadc_p = &hadc1;		// Affectation statique à ADC1
 
   /* USER CODE END 2 */
 
@@ -146,8 +150,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-
 
     /* USER CODE END WHILE */
 
@@ -517,8 +519,10 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 			engine_status.synchroState = SYNCHRO_ERROR;
 		}
 
-		generate_ignition_event(L_Cylinder, dwell_ms, speed_rpm, map, SPEED_IGN, SIZE_SPEED_IGN_TABLE, MAP_IGN, SIZE_MAP_IGN_TABLE, IGN_ADV);
-		generate_injection_event(L_Cylinder, speed_rpm, map, SPEED_INJ, SIZE_SPEED_INJ_TABLE, MAP_INJ, SIZE_MAP_INJ_TABLE, FUEL_INJ, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING_TABLE, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING_TABLE, FUEL_INJ_TIMING);
+		read_analog_sensor(&map_sensor);
+		read_analog_sensor(&mat_sensor);
+		generate_ignition_event(L_Cylinder, dwell_ms, speed_rpm, map_sensor.val, SPEED_IGN, SIZE_SPEED_IGN_TABLE, MAP_IGN, SIZE_MAP_IGN_TABLE, IGN_ADV);
+		generate_injection_event(L_Cylinder, speed_rpm, map_sensor.val, SPEED_INJ, SIZE_SPEED_INJ_TABLE, MAP_INJ, SIZE_MAP_INJ_TABLE, FUEL_INJ, SPEED_INJ_TIMING, SIZE_SPEED_INJ_TIMING_TABLE, MAP_INJ_TIMING, SIZE_MAP_INJ_TIMING_TABLE, FUEL_INJ_TIMING);
 	}
 }
 
