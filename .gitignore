@@ -1,7 +1,4 @@
-Software/Custom_ECU/.settings
 Software/.metadata
-Software/Custom_ECU/Debug
-Software/Custom_ECU/Launch
-Software/Custom_ECU/.settings/language.settings.xml
+Software/ECU_F411/Debug
+Software/ECU_F411/.settings
 python_graph
-.gitignore
