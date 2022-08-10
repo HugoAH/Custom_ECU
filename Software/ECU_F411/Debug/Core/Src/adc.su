@@ -1,0 +1,4 @@
+../Core/Src/adc.c:11:6:adc_channel_select	32	static
+../Core/Src/adc.c:73:6:ADC_pin_channel	24	static
+../Core/Src/adc.c:147:6:Sensor_Init	32	static
+../Core/Src/adc.c:154:6:read_analog_sensor	24	static

@@ -1,0 +1,4 @@
+../Core/Src/interpolation.c:9:7:lookup_table2D_interpolation	56	static
+../Core/Src/interpolation.c:23:7:bilinear_interpolation	72	static
+../Core/Src/interpolation.c:36:7:linear_interpolation	48	static
+../Core/Src/interpolation.c:45:6:indices	40	static

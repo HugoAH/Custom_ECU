@@ -1,0 +1,2 @@
+../Core/Src/ignition.c:20:7:dwell_to_angle	24	static
+../Core/Src/ignition.c:26:6:ignition_angle	56	static
