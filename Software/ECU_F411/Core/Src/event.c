@@ -4,7 +4,7 @@
  *  Created on: Jun 5, 2022
  *      Author: hugoA
  */
-
+#include "stdbool.h"
 #include "main.h"
 #include "event.h"
 #include "engine_parameters.h"
@@ -50,13 +50,16 @@ void Cylinder_Init(Cylinder list_cylinder[NB_CYLINDER])		// Cyl 1 PMH = 0°
 	list_cylinder[0].num = 1;
 	list_cylinder[0].IGN_PMH = 0;
 	Cylinder_pin(&list_cylinder[0]);
+	list_cylinder[0].state_pin_ign = 0;
+	list_cylinder[0].state_pin_inj = 0;
 
 	for(int i=1; i<NB_CYLINDER; i++)
 	{
 		list_cylinder[i].num = i+1;
 		list_cylinder[i].IGN_PMH = list_cylinder[i-1].IGN_PMH + ANGLE_BTW_PMH;
 		Cylinder_pin(&list_cylinder[i]);
-
+		list_cylinder[i].state_pin_ign = 0;
+		list_cylinder[i].state_pin_inj = 0;
 	}
 }
 

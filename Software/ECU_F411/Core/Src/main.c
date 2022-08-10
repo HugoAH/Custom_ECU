@@ -37,13 +37,13 @@ typedef enum{
 	IGNITION_ON = 1,
 	CRANKING = 2,
 	RUNNING = 3
-} engineState_t;
+}engineState_t;
 
 typedef enum{
 	SYNCHRO_INIT = 0,
 	SYNCHRO_OK = 1,
 	SYNCHRO_ERROR = 2
-} synchroState_t;
+}synchroState_t;
 
 typedef struct EngineStatus{
 	engineState_t engineState;
@@ -51,6 +51,7 @@ typedef struct EngineStatus{
 	bool missmatch_crank_tooth;
 	bool missmatch_cam_angle;
 }EngineStatus;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -450,22 +451,48 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	if(htim->Instance == TIM1)
-	{
-		crank_clock_ovf_counter ++;
-	}
-	else if(htim->Instance == TIM3)
+	if(htim->Instance == TIM3)
 	{
 		crank_angle += delta_integral_crank_angle;
 		if(engine_status.synchroState == SYNCHRO_OK && engine_status.engineState == RUNNING)
 		{
 			for(int i=0; i<NB_CYLINDER; i++)
-			{// rajouter prise en compte modulo !
-				HAL_GPIO_WritePin(L_Cylinder[i].IGN_GPIO_Port, L_Cylinder[i].IGN_Pin, (L_Cylinder[i].charge_angle<=crank_angle) && (crank_angle<=L_Cylinder[i].spark_angle));
-				HAL_GPIO_WritePin(L_Cylinder[i].INJ_GPIO_Port, L_Cylinder[i].INJ_Pin, (L_Cylinder[i].start_inj_angle<=crank_angle) && (crank_angle<=L_Cylinder[i].end_inj_angle));
+			{
+				if(L_Cylinder[i].spark_angle - L_Cylinder[i].charge_angle >= 0)
+				{
+					L_Cylinder[i].state_pin_ign	= (L_Cylinder[i].charge_angle <= crank_angle) && (crank_angle < L_Cylinder[i].spark_angle);
+				}
+				else
+				{
+					L_Cylinder[i].state_pin_ign	= (L_Cylinder[i].charge_angle <= crank_angle) || (crank_angle < L_Cylinder[i].spark_angle);
+				}
+
+				if(L_Cylinder[i].end_inj_angle - L_Cylinder[i].start_inj_angle >= 0)
+				{
+					L_Cylinder[i].state_pin_inj	= (L_Cylinder[i].start_inj_angle <= crank_angle) && (crank_angle < L_Cylinder[i].end_inj_angle);
+				}
+				else
+				{
+					L_Cylinder[i].state_pin_inj	= (L_Cylinder[i].start_inj_angle <= crank_angle) || (crank_angle < L_Cylinder[i].end_inj_angle);
+				}
+
+				HAL_GPIO_WritePin(L_Cylinder[i].IGN_GPIO_Port, L_Cylinder[i].IGN_Pin, L_Cylinder[i].state_pin_ign);
+				HAL_GPIO_WritePin(L_Cylinder[i].INJ_GPIO_Port, L_Cylinder[i].INJ_Pin, L_Cylinder[i].state_pin_inj);
 			}
 		}
 	}
+
+	else if(htim->Instance == TIM1)
+	{
+		crank_clock_ovf_counter ++;
+		if(crank_clock_ovf_counter >= 100)
+		{
+			delta_integral_crank_angle = 0;
+			crank_speed = 0;
+			engine_status.engineState = IGNITION_ON;
+		}
+	}
+
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)

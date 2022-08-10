@@ -23,6 +23,9 @@ typedef struct Cylinder{
 	float start_inj_angle;
 	float end_inj_angle;
 
+	bool state_pin_ign;
+	bool state_pin_inj;
+
 	float lbda;
 }Cylinder;
 
