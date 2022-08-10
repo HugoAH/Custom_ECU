@@ -1,4 +1,0 @@
-../Core/Src/event.c:14:6:Cylinder_pin	16	static
-../Core/Src/event.c:48:6:Cylinder_Init	24	static
-../Core/Src/event.c:63:6:generate_ignition_event	64	static
-../Core/Src/event.c:72:6:generate_injection_event	72	static

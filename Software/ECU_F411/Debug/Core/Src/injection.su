@@ -1,3 +1,0 @@
-../Core/Src/injection.c:24:7:time_to_angle	24	static
-../Core/Src/injection.c:30:7:fuel_to_time	16	static
-../Core/Src/injection.c:74:6:injection_angle	64	static
